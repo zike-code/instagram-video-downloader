@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <title>IG Video Downloader</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        font-size: 13px;
+        margin: 0;
+        padding: 12px;
+        background: #111;
+        color: #eee;
+      }
+      h1 {
+        font-size: 14px;
+        margin: 0 0 8px;
+      }
+      h2 {
+        font-size: 12px;
+        margin: 16px 0 8px;
+        color: #ccc;
+        border-top: 1px solid #333;
+        padding-top: 12px;
+      }
+      .row {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      button {
+        flex: 1;
+        padding: 6px 8px;
+        border: none;
+        border-radius: 6px;
+        background: #2d6cdf;
+        color: white;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      button.secondary {
+        background: #333;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      #status {
+        font-size: 12px;
+        color: #aaa;
+        margin-bottom: 8px;
+        min-height: 16px;
+      }
+      #list {
+        max-height: 260px;
+        overflow-y: auto;
+        border-top: 1px solid #333;
+      }
+      .item {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid #222;
+      }
+      .item img {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 4px;
+        background: #333;
+      }
+      .item .cap {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .item .actions {
+        display: flex;
+        gap: 4px;
+        flex: none;
+      }
+      .item .actions button {
+        flex: none;
+        width: 20px;
+        height: 20px;
+        padding: 0;
+        border-radius: 50%;
+        font-size: 11px;
+        line-height: 1;
+      }
+      .item .actions .delete-btn {
+        background: #d64545;
+      }
+      .item .actions .download-one-btn {
+        background: #3fae4a;
+      }
+      #count {
+        font-size: 12px;
+        color: #9c9;
+        margin-bottom: 4px;
+      }
+      .limit-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .limit-row label {
+        font-size: 12px;
+        color: #ccc;
+        white-space: nowrap;
+      }
+      #limitInput {
+        width: 60px;
+        padding: 4px 6px;
+        border-radius: 6px;
+        border: 1px solid #444;
+        background: #1c1c1c;
+        color: #eee;
+        font-size: 12px;
+      }
+      #folderLabel {
+        font-size: 12px;
+        color: #9c9;
+        margin-bottom: 8px;
+        min-height: 14px;
+      }
+      #folderLog {
+        font-size: 11px;
+        max-height: 140px;
+        overflow-y: auto;
+      }
+      .log-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 3px 0;
+        border-bottom: 1px solid #222;
+      }
+      .log-item .ok {
+        color: #6c6;
+      }
+      .log-item .fail {
+        color: #d66;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>IG Profile Video Downloader</h1>
+    <div class="limit-row">
+      <label for="limitInput">Limite de vídeos:</label>
+      <input id="limitInput" type="number" min="1" placeholder="sem limite" />
+    </div>
+    <div class="row">
+      <button id="scanBtn">Escanear perfil</button>
+      <button id="stopBtn" class="secondary" disabled>Parar</button>
+    </div>
+    <div id="status">Abra o perfil no Instagram e clique em "Escanear".</div>
+    <div id="count"></div>
+    <div class="row">
+      <button id="downloadBtn" disabled>Baixar todos (pasta Downloads)</button>
+      <button id="clearBtn" class="secondary">Limpar</button>
+    </div>
+
+    <h2>Baixar em uma pasta escolhida</h2>
+    <div class="row">
+      <button id="pickFolderBtn" class="secondary">Escolher pasta...</button>
+    </div>
+    <div id="folderLabel">Nenhuma pasta escolhida.</div>
+    <div class="row">
+      <button id="downloadToFolderBtn" disabled>Baixar todos nessa pasta</button>
+    </div>
+    <div id="folderLog"></div>
+
+    <div id="list"></div>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

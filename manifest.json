@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "IG Profile Video Downloader",
+  "version": "0.1.0",
+  "description": "Coleta e baixa os vídeos (posts e reels) de um perfil do Instagram usando a própria sessão logada no navegador.",
+  "permissions": ["downloads", "storage", "scripting", "tabs", "sidePanel"],
+  "host_permissions": ["https://www.instagram.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "IG Video Downloader"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.instagram.com/*"],
+      "js": ["content_main.js"],
+      "world": "MAIN",
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://www.instagram.com/*"],
+      "js": ["content_isolated.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
