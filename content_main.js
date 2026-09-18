@@ -1,8 +1,8 @@
-// Roda no "MAIN world" (contexto real da página), ANTES do app do Instagram carregar.
-// Intercepta fetch/XHR para capturar as respostas JSON que o próprio Instagram
-// já busca quando você rola o perfil/reels, e extrai qualquer vídeo encontrado.
-// Isso evita ter que recriar a API privada do Instagram (headers, app-id, etc),
-// que muda com frequência.
+// Runs in the MAIN world (the page's real context), BEFORE the Instagram app
+// loads. Hooks fetch/XHR to capture the JSON responses Instagram itself already
+// requests while you scroll the profile/reels, and extracts any video found.
+// This avoids having to reimplement Instagram's private API (headers, app-id,
+// and so on), which changes often.
 
 (function () {
   const SOURCE = "ig-video-grabber";

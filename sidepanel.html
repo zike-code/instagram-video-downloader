@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-br">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>IG Video Downloader</title>
@@ -149,27 +149,27 @@
   <body>
     <h1>IG Profile Video Downloader</h1>
     <div class="limit-row">
-      <label for="limitInput">Limite de vídeos:</label>
-      <input id="limitInput" type="number" min="1" placeholder="sem limite" />
+      <label for="limitInput">Video limit:</label>
+      <input id="limitInput" type="number" min="1" placeholder="no limit" />
     </div>
     <div class="row">
-      <button id="scanBtn">Escanear perfil</button>
-      <button id="stopBtn" class="secondary" disabled>Parar</button>
+      <button id="scanBtn">Scan profile</button>
+      <button id="stopBtn" class="secondary" disabled>Stop</button>
     </div>
-    <div id="status">Abra o perfil no Instagram e clique em "Escanear".</div>
+    <div id="status">Open the profile on Instagram and click "Scan profile".</div>
     <div id="count"></div>
     <div class="row">
-      <button id="downloadBtn" disabled>Baixar todos (pasta Downloads)</button>
-      <button id="clearBtn" class="secondary">Limpar</button>
+      <button id="downloadBtn" disabled>Download all (Downloads folder)</button>
+      <button id="clearBtn" class="secondary">Clear</button>
     </div>
 
-    <h2>Baixar em uma pasta escolhida</h2>
+    <h2>Download into a chosen folder</h2>
     <div class="row">
-      <button id="pickFolderBtn" class="secondary">Escolher pasta...</button>
+      <button id="pickFolderBtn" class="secondary">Choose folder...</button>
     </div>
-    <div id="folderLabel">Nenhuma pasta escolhida.</div>
+    <div id="folderLabel">No folder chosen.</div>
     <div class="row">
-      <button id="downloadToFolderBtn" disabled>Baixar todos nessa pasta</button>
+      <button id="downloadToFolderBtn" disabled>Download all into that folder</button>
     </div>
     <div id="folderLog"></div>
 

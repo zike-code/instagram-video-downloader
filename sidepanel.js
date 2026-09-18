@@ -19,7 +19,7 @@ function itemKey(item) {
 }
 
 function render() {
-  countEl.textContent = `${currentState.items.length} vídeo(s) encontrado(s)`;
+  countEl.textContent = `${currentState.items.length} video(s) found`;
   downloadBtn.disabled = currentState.items.length === 0;
   downloadToFolderBtn.disabled = currentState.items.length === 0 || !chosenDirHandle;
 
@@ -34,7 +34,7 @@ function render() {
 
     const cap = document.createElement("div");
     cap.className = "cap";
-    cap.textContent = item.caption || item.shortcode || "(sem legenda)";
+    cap.textContent = item.caption || item.shortcode || "(no caption)";
     div.appendChild(cap);
 
     const actions = document.createElement("div");
@@ -42,14 +42,14 @@ function render() {
 
     const downloadOneBtn = document.createElement("button");
     downloadOneBtn.className = "download-one-btn";
-    downloadOneBtn.title = "Baixar apenas este vídeo";
+    downloadOneBtn.title = "Download only this video";
     downloadOneBtn.textContent = "↓";
     downloadOneBtn.addEventListener("click", () => downloadOne(item, downloadOneBtn));
     actions.appendChild(downloadOneBtn);
 
     const deleteBtn = document.createElement("button");
     deleteBtn.className = "delete-btn";
-    deleteBtn.title = "Remover este vídeo da lista";
+    deleteBtn.title = "Remove this video from the list";
     deleteBtn.textContent = "×";
     deleteBtn.addEventListener("click", () => deleteOne(item));
     actions.appendChild(deleteBtn);
@@ -61,11 +61,11 @@ function render() {
 
 function downloadOne(item, btnEl) {
   if (btnEl) btnEl.disabled = true;
-  statusEl.textContent = "Baixando 1 vídeo...";
+  statusEl.textContent = "Downloading 1 video...";
   chrome.runtime.sendMessage(
     { type: "DOWNLOAD_VIDEOS", username: currentState.username, items: [item] },
     (res) => {
-      statusEl.textContent = res && res.ok ? "Vídeo baixado." : "Erro ao baixar.";
+      statusEl.textContent = res && res.ok ? "Video downloaded." : "Download failed.";
       if (btnEl) btnEl.disabled = false;
     }
   );
@@ -92,7 +92,7 @@ scanBtn.addEventListener("click", () => {
 
   scanBtn.disabled = true;
   stopBtn.disabled = false;
-  statusEl.textContent = "Recarregando a página...";
+  statusEl.textContent = "Reloading the page...";
   chrome.runtime.sendMessage({ type: "START_SCAN_ACTIVE_TAB", limit });
 });
 
@@ -100,16 +100,16 @@ stopBtn.addEventListener("click", () => {
   chrome.runtime.sendMessage({ type: "STOP_SCAN_ACTIVE_TAB" });
   scanBtn.disabled = false;
   stopBtn.disabled = true;
-  statusEl.textContent = "Escaneamento interrompido.";
+  statusEl.textContent = "Scan stopped.";
 });
 
 downloadBtn.addEventListener("click", () => {
   downloadBtn.disabled = true;
-  statusEl.textContent = "Baixando vídeos...";
+  statusEl.textContent = "Downloading videos...";
   chrome.runtime.sendMessage(
     { type: "DOWNLOAD_VIDEOS", username: currentState.username, items: currentState.items },
     (res) => {
-      statusEl.textContent = res && res.ok ? `Download iniciado para ${res.count} vídeo(s).` : "Erro ao baixar.";
+      statusEl.textContent = res && res.ok ? `Download started for ${res.count} video(s).` : "Download failed.";
       downloadBtn.disabled = false;
     }
   );
@@ -122,9 +122,9 @@ clearBtn.addEventListener("click", () => {
   });
 });
 
-// --- Baixar em uma pasta escolhida pelo usuário (File System Access API) ---
-// O painel lateral não fecha sozinho (diferente do popup tradicional), então
-// dá pra fazer isso direto aqui, sem precisar abrir uma aba separada.
+// --- Download into a folder chosen by the user (File System Access API) ---
+// The side panel does not close by itself (unlike the traditional popup), so
+// this can happen right here without opening a separate tab.
 
 function logFolderLine(text, ok) {
   const div = document.createElement("div");
@@ -133,27 +133,28 @@ function logFolderLine(text, ok) {
   label.textContent = text;
   const status = document.createElement("span");
   status.className = ok ? "ok" : "fail";
-  status.textContent = ok ? "OK" : "falhou";
+  status.textContent = ok ? "OK" : "failed";
   div.appendChild(label);
   div.appendChild(status);
   folderLog.prepend(div);
 }
 
 function buildFilename(item, index) {
-  const datePart = item.takenAt ? new Date(item.takenAt * 1000).toISOString().slice(0, 10) : "sem-data";
+  const datePart = item.takenAt ? new Date(item.takenAt * 1000).toISOString().slice(0, 10) : "no-date";
   const namePart = item.shortcode || String(index + 1).padStart(4, "0");
   return `${datePart}_${namePart}.mp4`;
 }
 
-// Busca os bytes do vídeo pedindo para o content script (rodando na própria
-// página do Instagram) fazer o fetch — um fetch direto daqui (painel da
-// extensão) é bloqueado pelo CDN por CORS, já que a origem não é instagram.com.
+// Gets the video bytes by asking the content script (running on the Instagram
+// page itself) to do the fetch — a direct fetch from here (the extension
+// panel) is blocked by the CDN over CORS, since the origin is not
+// instagram.com.
 function fetchVideoBlob(url) {
   return new Promise((resolve, reject) => {
-    if (currentState.tabId == null) return reject(new Error("aba do Instagram não encontrada"));
+    if (currentState.tabId == null) return reject(new Error("Instagram tab not found"));
     chrome.tabs.sendMessage(currentState.tabId, { type: "FETCH_VIDEO_BYTES", url }, (res) => {
       if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
-      if (!res || !res.ok) return reject(new Error((res && res.error) || "falha desconhecida"));
+      if (!res || !res.ok) return reject(new Error((res && res.error) || "unknown failure"));
       fetch(`data:video/mp4;base64,${res.base64}`)
         .then((r) => r.blob())
         .then(resolve)
@@ -165,10 +166,10 @@ function fetchVideoBlob(url) {
 pickFolderBtn.addEventListener("click", async () => {
   try {
     chosenDirHandle = await window.showDirectoryPicker();
-    folderLabel.textContent = `Pasta escolhida: ${chosenDirHandle.name}`;
+    folderLabel.textContent = `Chosen folder: ${chosenDirHandle.name}`;
     render();
   } catch (e) {
-    // usuário cancelou a escolha da pasta
+    // the user cancelled the folder picker
   }
 });
 
@@ -183,7 +184,7 @@ downloadToFolderBtn.addEventListener("click", async () => {
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
     const filename = buildFilename(item, i);
-    statusEl.textContent = `Baixando na pasta escolhida: ${i + 1}/${items.length}...`;
+    statusEl.textContent = `Downloading into the chosen folder: ${i + 1}/${items.length}...`;
     try {
       const blob = await fetchVideoBlob(item.url);
       const fileHandle = await chosenDirHandle.getFileHandle(filename, { create: true });
@@ -193,12 +194,12 @@ downloadToFolderBtn.addEventListener("click", async () => {
       done++;
       logFolderLine(filename, true);
     } catch (e) {
-      console.warn("Falha ao baixar", item.url, e);
+      console.warn("Failed to download", item.url, e);
       logFolderLine(`${filename} (${e.message || e})`, false);
     }
   }
 
-  statusEl.textContent = `Concluído: ${done}/${items.length} vídeo(s) salvos em "${chosenDirHandle.name}".`;
+  statusEl.textContent = `Done: ${done}/${items.length} video(s) saved into "${chosenDirHandle.name}".`;
   pickFolderBtn.disabled = false;
   render();
 });
@@ -206,12 +207,12 @@ downloadToFolderBtn.addEventListener("click", async () => {
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === "SCAN_STATUS_RELAY") {
     const map = {
-      reloading: "Recarregando a página...",
-      "scanning-posts": "Rolando o feed de posts...",
-      "opening-post": "Abrindo posts para capturar o vídeo...",
-      "opening-reels": "Abrindo aba de Reels...",
-      "scanning-reels": "Rolando os Reels...",
-      done: "Escaneamento concluído.",
+      reloading: "Reloading the page...",
+      "scanning-posts": "Scrolling the posts feed...",
+      "opening-post": "Opening posts to capture the video...",
+      "opening-reels": "Opening the Reels tab...",
+      "scanning-reels": "Scrolling the Reels...",
+      done: "Scan complete.",
     };
     const base = map[msg.status] || msg.status;
     statusEl.textContent = msg.detail ? `${base} (${msg.detail})` : base;
@@ -223,6 +224,6 @@ chrome.runtime.onMessage.addListener((msg) => {
   }
 });
 
-// Atualiza a lista periodicamente enquanto o painel estiver aberto
+// Refresh the list periodically while the panel is open
 refreshState();
 setInterval(refreshState, 1500);

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "IG Profile Video Downloader",
   "version": "0.1.0",
-  "description": "Coleta e baixa os vídeos (posts e reels) de um perfil do Instagram usando a própria sessão logada no navegador.",
+  "description": "Collects and downloads the videos (posts and reels) of an Instagram profile using your own logged-in browser session.",
   "permissions": ["downloads", "storage", "scripting", "tabs", "sidePanel"],
   "host_permissions": ["https://www.instagram.com/*"],
   "background": {

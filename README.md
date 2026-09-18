@@ -1,71 +1,73 @@
 # IG Profile Video Downloader
 
-Extensão Chrome/Edge (Manifest V3) para coletar e baixar os vídeos (posts + Reels)
-de um perfil do Instagram, usando a sua própria sessão logada no navegador.
+A Chrome/Edge extension (Manifest V3) that collects and downloads the videos
+(posts + Reels) of an Instagram profile, using your own logged-in browser
+session.
 
-## Como funciona
+## How it works
 
-Em vez de recriar a API privada do Instagram (que exige headers específicos e muda
-com frequência), a extensão **intercepta as respostas de rede que o próprio
-Instagram já busca** enquanto você rola o perfil. Um script injetado no contexto
-da página (`content_main.js`) faz hook em `fetch`/`XMLHttpRequest`, procura por
-vídeos nas respostas JSON e repassa para a extensão.
+Instead of reimplementing Instagram's private API (which needs specific headers
+and changes often), the extension **intercepts the network responses Instagram
+already fetches** while you scroll the profile. A script injected into the page
+context (`content_main.js`) hooks `fetch`/`XMLHttpRequest`, looks for videos in
+the JSON responses and passes them back to the extension.
 
-Um segundo script (`content_isolated.js`) rola a página automaticamente (feed e,
-se existir, a aba Reels) para forçar o carregamento de mais posts, e abre os
-posts que ainda não têm vídeo capturado (o HTML inicial só traz os primeiros
-~12 completos; o resto exige abrir o post individualmente).
+A second script (`content_isolated.js`) scrolls the page automatically (the feed
+and, if present, the Reels tab) to force more posts to load, and opens the posts
+whose video has not been captured yet — the initial HTML only carries the first
+~12 in full, the rest require opening each post individually.
 
-A interface roda num **painel lateral** (Side Panel do Chrome, o mesmo padrão
-usado por extensões como a MetaMask) em vez de um popup tradicional — assim
-ela fica fixa na tela e não fecha sozinha ao perder o foco.
+The interface lives in a **side panel** (Chrome's Side Panel, the same pattern
+extensions like MetaMask use) rather than a traditional popup, so it stays
+pinned on screen instead of closing when it loses focus.
 
-## Instalação (modo desenvolvedor)
+## Installation (developer mode)
 
-1. Abra `chrome://extensions`.
-2. Ative o "Modo do desenvolvedor" (canto superior direito).
-3. Clique em "Carregar sem compactação" e selecione a pasta `instagram-video-downloader`.
+1. Open `chrome://extensions`.
+2. Enable "Developer mode" (top-right corner).
+3. Click "Load unpacked" and select the `instagram-video-downloader` folder.
 
-## Uso
+## Usage
 
-1. Faça login no Instagram normalmente pelo navegador.
-2. Abra o perfil desejado (`instagram.com/usuario`).
-3. Clique no ícone da extensão — isso abre o painel lateral (fica fixo até você fechar).
-4. Clique em **"Escanear perfil"** e aguarde. O contador de vídeos encontrados
-   atualiza em tempo real.
-5. Para baixar, duas opções:
-   - **"Baixar todos (pasta Downloads)"** — salva em
-     `Downloads/instagram/<usuario>/<data>_<código>.mp4`.
-   - **"Escolher pasta..." + "Baixar todos nessa pasta"** — deixa você escolher
-     qualquer pasta do computador (via File System Access API) e salva os
-     arquivos direto ali.
-   - Cada vídeo na lista também tem botões individuais: ↓ (verde) baixa só
-     aquele vídeo, × (vermelho) remove da lista.
+1. Log in to Instagram normally in your browser.
+2. Open the profile you want (`instagram.com/username`).
+3. Click the extension icon — this opens the side panel, which stays open until
+   you close it.
+4. Click **"Scan profile"** and wait. The counter of videos found updates live.
+5. To download, two options:
+   - **"Download all (Downloads folder)"** — saves to
+     `Downloads/instagram/<username>/<date>_<shortcode>.mp4`.
+   - **"Choose folder..." + "Download all into that folder"** — lets you pick
+     any folder on your computer (via the File System Access API) and writes
+     the files straight there.
+   - Each video in the list also has its own buttons: ↓ (green) downloads just
+     that video, × (red) removes it from the list.
 
-## Limitações e avisos importantes
+## Limits and important warnings
 
-- **Fragilidade**: o Instagram muda o formato das respostas com frequência.
-  Se parar de encontrar vídeos, é provável que o formato tenha mudado e o
-  scanner (`extractVideos` em `content_main.js`) precise de ajuste.
-- **Stories** não estão implementados (expiram rápido e têm um fluxo de rede
-  diferente); só posts do feed e Reels.
-- **Carrosséis** (posts com vários vídeos/fotos) são capturados desde que o
-  Instagram carregue os dados do vídeo na resposta.
-- **Rate limiting**: rolar muito rápido ou baixar centenas de vídeos de uma vez
-  pode fazer o Instagram limitar ou sinalizar a conta. Os scripts já colocam
-  pequenos delays; evite rodar isso o tempo todo ou em várias contas seguidas.
-- **Uso responsável**: use apenas para conteúdo seu ou de perfis para os quais
-  você tem permissão de baixar/reaproveitar. Baixar e redistribuir vídeos de
-  terceiros sem autorização pode violar direitos autorais e os Termos de Uso
-  do Instagram.
+- **Fragility**: Instagram changes its response format often. If videos stop
+  being found, the format has probably changed and the scanner (`extractVideos`
+  in `content_main.js`) needs adjusting.
+- **Stories** are not implemented (they expire quickly and use a different
+  network flow); feed posts and Reels only.
+- **Carousels** (posts with several videos/photos) are captured as long as
+  Instagram includes the video data in the response.
+- **Rate limiting**: scrolling very fast or downloading hundreds of videos at
+  once can get the account throttled or flagged. The scripts already insert
+  small delays; avoid running this constantly or across several accounts in a
+  row.
+- **Responsible use**: use it only for your own content, or for profiles you
+  have permission to download from. Downloading and redistributing other
+  people's videos without authorisation can infringe copyright and Instagram's
+  Terms of Use.
 
-## Estrutura
+## Structure
 
 ```
 instagram-video-downloader/
-├── manifest.json               # config da extensão (MV3)
-├── content_main.js              # hook de fetch/XHR (MAIN world)
-├── content_isolated.js           # auto-scroll + abre posts + relay de mensagens
-├── background.js                # estado por aba + downloads + side panel
-├── sidepanel.html / sidepanel.js # UI da extensão (painel lateral)
+├── manifest.json                 # extension config (MV3)
+├── content_main.js               # fetch/XHR hook (MAIN world)
+├── content_isolated.js           # auto-scroll + opens posts + message relay
+├── background.js                 # per-tab state + downloads + side panel
+├── sidepanel.html / sidepanel.js # extension UI (side panel)
 ```

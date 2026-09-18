@@ -1,6 +1,6 @@
-// Roda no "isolated world": recebe os vídeos capturados pelo content_main.js
-// (via postMessage), encaminha para o background, e faz o auto-scroll do
-// perfil/reels para forçar o Instagram a carregar mais posts.
+// Runs in the isolated world: receives the videos captured by content_main.js
+// (via postMessage), forwards them to the background worker, and auto-scrolls
+// the profile/reels to make Instagram load more posts.
 
 const SOURCE = "ig-video-grabber";
 
@@ -12,11 +12,11 @@ function getUsernameFromUrl() {
   return parts[0];
 }
 
-// Enquanto um escaneamento está ativo, só aceitamos vídeos cujo shortcode
-// apareceu no grid do próprio perfil (posts/reels que nós mesmos listamos).
-// Isso evita capturar vídeos de "Sugestões"/"Para você" que o Instagram
-// injeta no meio do feed, ou reels recomendados que tocam em sequência
-// quando abrimos um reel do perfil.
+// While a scan is running we only accept videos whose shortcode appeared in
+// the profile's own grid (posts/reels we listed ourselves). This avoids
+// capturing "Suggested"/"For you" videos that Instagram injects into the
+// feed, or recommended reels that autoplay in sequence once a profile reel
+// is opened.
 let allowedShortcodes = null;
 
 function shortcodeFromHref(href) {
@@ -29,19 +29,19 @@ function filterAllowed(videos) {
   return videos.filter((v) => v.shortcode && allowedShortcodes.has(v.shortcode));
 }
 
-// chrome.runtime pode ficar inválido (ex: extensão recarregada enquanto a
-// página continua aberta) — sem isso, um erro aqui derruba silenciosamente
-// o resto do fluxo de escaneamento (fica "travado" para sempre).
+// chrome.runtime can become invalid (e.g. the extension was reloaded while
+// the page stayed open) — without this guard an error here silently kills the
+// rest of the scan flow, leaving it stuck forever.
 function safeSend(msg) {
   try {
     chrome.runtime.sendMessage(msg);
   } catch (e) {
-    /* contexto da extensão invalidado, ignora */
+    /* extension context invalidated, ignore */
   }
 }
 
-// Limite opcional de vídeos escolhido pelo usuário: assim que atingido,
-// paramos de escanear/abrir mais posts em vez de varrer o perfil inteiro.
+// Optional video limit chosen by the user: once reached we stop scanning and
+// opening posts instead of sweeping the whole profile.
 let videoLimit = null;
 let foundCount = 0;
 const reportedKeys = new Set();
@@ -76,9 +76,9 @@ window.addEventListener("message", (event) => {
   reportVideos(data.videos);
 });
 
-// --- Escaneia dados já embutidos na página (perfis pequenos não fazem ---
-// --- nenhuma requisição extra: os posts já vêm prontos no HTML inicial ---
-// --- dentro de tags <script type="application/json">). ---
+// --- Scan data already embedded in the page. Small profiles make no extra ---
+// --- request at all: their posts arrive complete in the initial HTML,     ---
+// --- inside <script type="application/json"> tags.                        ---
 
 function extractCaption(node) {
   if (!node || typeof node !== "object") return "";
@@ -162,28 +162,30 @@ function scanJsonScriptTags() {
       const data = JSON.parse(script.textContent);
       extractVideosFromData(data, results, seen, 0);
     } catch (e) {
-      /* não era JSON relevante, ignora */
+      /* not relevant JSON, ignore */
     }
   }
 
   reportVideos(results);
 }
 
-// roda uma vez ao carregar, e observa novas tags <script> inseridas depois
-// (ex: ao trocar de aba Posts/Reels dentro do perfil)
+// runs once on load, then watches for <script> tags inserted later
+// (e.g. when switching between the Posts and Reels tabs of a profile)
 scanJsonScriptTags();
 new MutationObserver(() => scanJsonScriptTags()).observe(document.documentElement, {
   childList: true,
   subtree: true,
 });
 
-// --- Auto-scroll para forçar carregamento de mais posts ---
+// --- Auto-scroll to force more posts to load ---
 let scanning = false;
 
-// Tenta ler o total de posts declarado no cabeçalho do perfil ("9 posts",
-// "9 publicações", etc) para saber quando já achamos tudo e parar cedo —
-// sem isso, o scroll nunca para porque o Instagram enfileira sugestões de
-// outros perfis infinitamente depois que os posts do dono acabam.
+// Try to read the post total declared in the profile header ("9 posts",
+// "9 publicações", ...) so we know when everything has been found and can
+// stop early — without it the scroll never ends, because Instagram queues
+// suggestions from other profiles forever once the owner's posts run out.
+// The regex keeps the Portuguese wording too, since it matches whatever
+// language Instagram renders its UI in.
 function getDeclaredPostCount() {
   const text = document.body.innerText || "";
   const match = text.match(/([\d.,]+)\s*(posts?|publica[cç][aã]o|publica[cç][oõ]es)/i);
@@ -203,7 +205,7 @@ async function autoScroll({ maxRounds = 20, maxIdleRounds = 2, stepDelayMs = 150
   let round = 0;
 
   while (round < maxRounds) {
-    if (!scanning) return; // cancelado
+    if (!scanning) return; // cancelled
     round++;
 
     const linkCount = countPostLinks();
@@ -265,11 +267,11 @@ function closeModal() {
   );
 }
 
-// O HTML inicial (após o F5) só vem com os dados completos dos primeiros
-// ~12 posts; o resto, carregado via scroll, só tem miniatura/contador. Para
-// esses, é preciso abrir o post (clique -> espera -> fecha) para forçar o
-// Instagram a buscar a URL real do vídeo, do mesmo jeito que aconteceria se
-// você clicasse manualmente em cada um.
+// The initial HTML (after the refresh) only carries full data for the first
+// ~12 posts; the rest, loaded by scrolling, only have a thumbnail and counter.
+// For those the post has to be opened (click -> wait -> close) to make
+// Instagram fetch the real video URL, exactly as it would if you clicked each
+// one by hand.
 async function visitPostsForVideoData(links, visitedHrefs) {
   let i = 0;
   for (const link of links) {
@@ -338,9 +340,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           }
         }
       } catch (e) {
-        console.warn("IG video grabber: erro durante o escaneamento", e);
+        console.warn("IG video grabber: error during the scan", e);
       } finally {
-        // garante que o popup nunca fique "travado" mesmo se algo lançar erro
+        // makes sure the panel never stays stuck even if something throws
         scanning = false;
         safeSend({ type: "SCAN_STATUS", status: "done" });
       }
@@ -350,9 +352,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     scanning = false;
     sendResponse({ ok: true });
   } else if (msg.type === "FETCH_VIDEO_BYTES") {
-    // Buscar o vídeo aqui (rodando na própria página do Instagram) em vez de
-    // no painel da extensão evita bloqueios de CORS: o CDN costuma só
-    // permitir leitura via fetch/XHR a partir da origem do instagram.com.
+    // Fetching the video here (running on the Instagram page itself) instead of
+    // in the extension panel avoids CORS blocks: the CDN generally only allows
+    // reads via fetch/XHR from the instagram.com origin.
     (async () => {
       try {
         const res = await fetch(msg.url);
